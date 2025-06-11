@@ -1,0 +1,132 @@
+@Entity
+public class Application {
+  @Id @GeneratedValue Long id;
+  @NotBlank String applicantName;
+  @Email String email;
+  boolean verified = false;
+  LocalDateTime appliedAt = LocalDateTime.now();
+  LocalDateTime verifiedAt;
+}
+public class ApplicationDTO {
+  @NotBlank public String applicantName;
+  @Email public String email;
+}
+@Service
+public class ApplicationService {
+  @Autowired private ApplicationRepository repo;
+
+  public ApplicationDTO create(ApplicationDTO dto) {
+    Application app = new Application();
+    app.setApplicantName(dto.applicantName);
+    app.setEmail(dto.email);
+    repo.save(app);
+    return toDto(app);
+  }
+
+  public ApplicationDTO verify(Long id) {
+    Application app = repo.findById(id)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    app.setVerified(true);
+    app.setVerifiedAt(LocalDateTime.now());
+    return toDto(repo.save(app));
+  }
+}
+@RestController
+@RequestMapping("/applications")
+public class ApplicationController {
+  @Autowired ApplicationService svc;
+
+  @PostMapping
+  public ResponseEntity<ApplicationDTO> create(@Valid @RequestBody ApplicationDTO dto) {
+    return new ResponseEntity<>(svc.create(dto), HttpStatus.CREATED);
+  }
+
+  @PostMapping("/{id}/verify")
+  public ApplicationDTO verify(@PathVariable Long id) {
+    return svc.verify(id);
+  }
+}
+npm install express express-validator
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+
+const app = express();
+app.use(express.json());
+
+let apps = [], nextId = 1;
+
+app.post('/applications', [
+  body('applicantName').isString().notEmpty(),
+  body('email').isEmail()
+], (req, res) => {
+  const errs = validationResult(req);
+  if (!errs.isEmpty()) return res.status(400).json({ errors: errs.array() });
+  const appObj = { id: nextId++, ...req.body, verified: false, appliedAt: new Date() };
+  apps.push(appObj);
+  res.status(201).json(appObj);
+});
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+
+const app = express();
+app.use(express.json());
+
+let apps = [], nextId = 1;
+
+app.post('/applications', [
+  body('applicantName').isString().notEmpty(),
+  body('email').isEmail()
+], (req, res) => {
+  const errs = validationResult(req);
+  if (!errs.isEmpty()) return res.status(400).json({ errors: errs.array() });
+  const appObj = { id: nextId++, ...req.body, verified: false, appliedAt: new Date() };
+  apps.push(appObj);
+  res.status(201).json(appObj);
+});
+
+app.post('/applications/:id/verify', (req, res) => {
+  const appObj = apps.find(a => a.id === +req.params.id);
+  if (!appObj) return res.status(404).json({ error: 'Not found' });
+  appObj.verified = true;
+  appObj.verifiedAt = new Date();
+  res.json(appObj);
+});
+
+app.listen(3000, () => console.log('Server running'));
+
+app.post('/applications/:id/verify', (req, res) => {const express = require('express');
+const { body, validationResult } = require('express-validator');
+
+const app = express();
+app.use(express.json());
+
+let apps = [], nextId = 1;
+
+app.post('/applications', [
+  body('applicantName').isString().notEmpty(),
+  body('email').isEmail()
+], (req, res) => {
+  const errs = validationResult(req);
+  if (!errs.isEmpty()) return res.status(400).json({ errors: errs.array() });
+  const appObj = { id: nextId++, ...req.body, verified: false, appliedAt: new Date() };
+  apps.push(appObj);
+  res.status(201).json(appObj);
+});
+
+app.post('/applications/:id/verify', (req, res) => {===========
+  const appObj = apps.find(a => a.id === +req.params.id);
+  if (!appObj) return res.status(404).json({ error: 'Not found' });
+  appObj.verified = true;
+  appObj.verifiedAt = new Date();
+  res.json(appObj);
+});
+
+app.listen(3000, () => console.log('Server running'));
+
+  if (!appObj) return res.status(404).json({ error: 'Not found' });
+  appObj.verified = true;
+  appObj.verifiedAt = new Date();
+  res.json(appObj);
+});
+
+app.listen(3000, () => console.log('Server running'));
